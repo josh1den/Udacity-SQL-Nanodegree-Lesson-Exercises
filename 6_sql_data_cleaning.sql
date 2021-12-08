@@ -192,3 +192,46 @@ the last letter of their last name (lowercase), the number of letters in
 their first name, the number of letters in their last name, and then the
 name of the company they are working with, all capitalized with no spaces.
 */
+
+with s AS (
+  SELECT name, primary_poc, LEFT(primary_poc, POSITION(' ' IN primary_poc)-1)
+  AS first_name, RIGHT(primary_poc, LENGTH(primary_poc) -
+  POSITION(' ' IN primary_poc)) AS last_name
+FROM accounts                                                                                                )
+SELECT *, (LOWER(LEFT(first_name, 1)) || LOWER(RIGHT(first_name, 1)) ||
+LOWER(LEFT(last_name, 1)) || LOWER(RIGHT(last_name,1)) || LENGTH(first_name) ||
+LENGTH(last_name) || UPPER(REPLACE(name, ' ', ''))) AS password
+FROM s
+LIMIT 5;
+
+/*
+Use COALESCE to fill in the accounts.id column with account_id for the NULL
+value in the table
+*/
+
+SELECT *, COALESCE(a.id, o.account_id) AS id
+FROM accounts a
+LEFT JOIN orders o
+ON a.id = o.account_id
+WHERE o.total IS NULL;
+
+/*
+Use COALESCE to fill in the orders.account_id column with the account_id for
+the NULL value
+*/
+
+SELECT *, COALESCE(o.account_id, a.id) AS account_id
+FROM accounts a
+LEFT JOIN orders o
+ON a.id = o.account_id
+WHERE o.total IS NULL;
+
+/*
+Use COALESCE to fill in each of the qty and usd columns with 0 for the table
+*/
+
+SELECT *, COALESCE(paper_qty, 0), COALESCE(standard_qty, 0)
+FROM accounts a
+LEFT JOIN orders o
+ON a.id = o.account_id
+WHERE o.total IS NULL;
